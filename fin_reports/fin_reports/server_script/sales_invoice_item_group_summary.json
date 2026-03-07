@@ -1,0 +1,17 @@
+{
+ "creation": "2024-01-01 00:00:00.000000",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Server Script",
+ "dt": "Sales Invoice",
+ "enabled": 1,
+ "event": "After Save",
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": null,
+ "name": "Sales Invoice - Item Group Summary",
+ "owner": "Administrator",
+ "reference_doctype": "Sales Invoice",
+ "script": "# Delete old summary rows for this invoice (handles re-saves)\nfrappe.db.delete(\"Item Group Sales Summary\", {\n    \"sales_invoice\": doc.name\n})\n\n# Group items by item_group\ngroup_totals = {}\n\nfor item in doc.items:\n    group = item.item_group or \"Uncategorized\"\n    if group not in group_totals:\n        group_totals[group] = {\"total_qty\": 0, \"total_amount\": 0}\n    group_totals[group][\"total_qty\"]    += flt(item.qty)\n    group_totals[group][\"total_amount\"] += flt(item.amount)\n\n# Insert one summary record per item group\nfor group_name, values in group_totals.items():\n    summary = frappe.get_doc({\n        \"doctype\":       \"Item Group Sales Summary\",\n        \"sales_invoice\": doc.name,\n        \"posting_date\":  doc.posting_date,\n        \"customer\":      doc.customer,\n        \"item_group\":    group_name,\n        \"total_qty\":     values[\"total_qty\"],\n        \"total_amount\":  values[\"total_amount\"]\n    })\n    summary.insert(ignore_permissions=True)\n\nfrappe.db.commit()",
+ "script_type": "DocType Event"
+}
