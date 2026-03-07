@@ -9,25 +9,37 @@ def execute(filters=None):
             "fieldname": "item_group",
             "fieldtype": "Link",
             "options": "Item Group",
-            "width": 200
-        },
-        {
-            "label": "Total Quantity Sold",
-            "fieldname": "total_qty",
-            "fieldtype": "Float",
             "width": 180
         },
         {
-            "label": "Total Amount Sold",
-            "fieldname": "total_amount",
-            "fieldtype": "Currency",
-            "width": 200
+            "label": "Quantity",
+            "fieldname": "total_qty",
+            "fieldtype": "Float",
+            "width": 140
         },
         {
-            "label": "Number of Invoices",
+            "label": "Total Amount",
+            "fieldname": "total_amount",
+            "fieldtype": "Currency",
+            "width": 180
+        },
+        {
+            "label": "Margin",
+            "fieldname": "total_margin",
+            "fieldtype": "Currency",
+            "width": 160
+        },
+        {
+            "label": "Average Margin",
+            "fieldname": "avg_margin",
+            "fieldtype": "Currency",
+            "width": 160
+        },
+        {
+            "label": "Invoices",
             "fieldname": "invoice_count",
             "fieldtype": "Int",
-            "width": 160
+            "width": 110
         }
     ]
 
@@ -46,12 +58,18 @@ def execute(filters=None):
         conditions += " AND customer = %(customer)s"
         values["customer"] = filters["customer"]
 
+    if filters.get("item_group"):
+        conditions += " AND item_group = %(item_group)s"
+        values["item_group"] = filters["item_group"]
+
     data = frappe.db.sql(f"""
         SELECT
             item_group,
-            SUM(total_qty)                  AS total_qty,
-            SUM(total_amount)               AS total_amount,
-            COUNT(DISTINCT sales_invoice)   AS invoice_count
+            SUM(total_qty)                                 AS total_qty,
+            SUM(total_amount)                              AS total_amount,
+            SUM(total_margin)                              AS total_margin,
+            SUM(total_margin) / NULLIF(SUM(total_qty), 0) AS avg_margin,
+            COUNT(DISTINCT sales_invoice)                  AS invoice_count
         FROM
             `tabItem Group Sales Summary`
         {conditions}

@@ -20,6 +20,13 @@ frappe.query_reports["Item Group Sales Report"] = {
             fieldtype: "Link",
             options: "Customer",
             reqd: 0
+        },
+        {
+            fieldname: "item_group",
+            label: __("Item Group"),
+            fieldtype: "Link",
+            options: "Item Group",
+            reqd: 0
         }
     ]
 };
